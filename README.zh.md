@@ -57,7 +57,7 @@
 
 ```bash
 # 检查 Python 版本
-python --version  # 应显示 3.12 或更高
+uv run python --version  # 应显示 3.12 或更高
 
 # 检查 UV 安装
 uv --version

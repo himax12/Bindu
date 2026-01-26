@@ -57,7 +57,7 @@ Voordat je Bindu installeert, zorg ervoor dat je hebt:
 
 ```bash
 # Controleer Python versie
-python --version  # Moet 3.12 of hoger tonen
+uv run python --version  # Moet 3.12 of hoger tonen
 
 # Controleer UV installatie
 uv --version

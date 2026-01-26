@@ -57,7 +57,7 @@ Antes de instalar Bindu, asegúrate de tener:
 
 ```bash
 # Verifica la versión de Python
-python --version  # Debe mostrar 3.12 o superior
+uv run python --version  # Debe mostrar 3.12 o superior
 
 # Verifica la instalación de UV
 uv --version

@@ -81,7 +81,7 @@ Before installing Bindu, ensure you have:
 
 ```bash
 # Check Python version
-python --version  # Should show 3.12 or higher
+uv run python --version  # Should show 3.12 or higher
 
 # Check UV installation
 uv --version
@@ -1280,7 +1280,7 @@ Want integration with your favorite framework? [Let us know on Discord](https://
 Bindu maintains **70%+ test coverage**:
 
 ```bash
-pytest -n auto --cov=bindu --cov-report= && coverage report --skip-covered --fail-under=70
+uv run pytest -n auto --cov=bindu --cov-report= && coverage report --skip-covered --fail-under=70
 ```
 
 ---

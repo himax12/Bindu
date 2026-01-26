@@ -59,7 +59,7 @@ Bevor du Bindu installierst, stelle sicher, dass du Folgendes hast:
 
 ```bash
 # Python-Version prüfen
-python --version  # Sollte 3.12 oder höher anzeigen
+uv run python --version  # Sollte 3.12 oder höher anzeigen
 
 # UV-Installation prüfen
 uv --version
@@ -1192,7 +1192,7 @@ Möchtest du Integration mit deinem Lieblings-Framework? [Lass es uns auf Discor
 Bindu hält **70%+ Test-Coverage**:
 
 ```bash
-pytest -n auto --cov=bindu --cov-report= && coverage report --skip-covered --fail-under=70
+uv run pytest -n auto --cov=bindu --cov-report= && coverage report --skip-covered --fail-under=70
 ```
 
 ---

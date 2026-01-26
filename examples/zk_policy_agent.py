@@ -7,15 +7,18 @@ without revealing the sensitive data itself.
 
 Author: Baljot Singh
 """
+
 import time
 from bindu.penguin.bindufy import bindufy
 
 # --- Simulation Logic ---
 
+
 def generate_mock_zk_proof(content: str) -> dict:
     """
     Simulates the generation of a ZK-SNARK proof.
-    In a production version (like ZK-Sentinel), this would utilize 
+
+    In a production version (like ZK-Sentinel), this would utilize
     circom/snarkjs or a Python binding for a proving system.
     """
     # Simulate computation cost
@@ -27,20 +30,26 @@ def generate_mock_zk_proof(content: str) -> dict:
     return {
         "proof_scheme": "groth16-mock",
         "public_inputs": ["policy_hash_v1", len(content)],
-        "proof": f"0x{proof_hash}..."
+        "proof": f"0x{proof_hash}...",
     }
 
+
 def check_policy(content: str) -> bool:
-    """Simple policy check: ensure no 'TOP SECRET' data is leaked."""
+    """Perform a simple policy check.
+
+    Evaluates the provided proof against the current policy set.
+    """
     forbidden_terms = ["TOP SECRET", "CLASSIFIED", "PRIVATE KEY"]
     return not any(term in content for term in forbidden_terms)
 
+
 # --- Bindu Handler ---
 
+
 def handler(messages: list[dict[str, str]]):
-    """
-    Intercepts the user message, validates it against the policy,
-    and returns a 'Signed' verification result.
+    """Intercept the request and check the policy.
+
+    The main entry point for processing incoming agent requests.
     """
     # Defensive check for empty history
     if not messages:
@@ -52,10 +61,12 @@ def handler(messages: list[dict[str, str]]):
     is_compliant = check_policy(last_user_message)
 
     if not is_compliant:
-        return [{
-            "role": "assistant", 
-            "content": "❌ BLOCK: Message contains forbidden content. Policy verification failed."
-        }]
+        return [
+            {
+                "role": "assistant",
+                "content": "❌ BLOCK: Message contains forbidden content. Policy verification failed.",
+            }
+        ]
 
     # 2. Generate Proof (The "Founder Energy" touch)
     proof = generate_mock_zk_proof(last_user_message)
@@ -69,18 +80,16 @@ def handler(messages: list[dict[str, str]]):
 
     return [{"role": "assistant", "content": response_body}]
 
+
 # --- Configuration ---
 
 config = {
-    "author": "baljots1000@gmail.com",  
+    "author": "baljots1000@gmail.com",
     "name": "zk_policy_agent",
     "description": "A security agent that provides proofs of policy compliance.",
-    "deployment": {
-        "url": "http://localhost:3773", 
-        "expose": True
-    },
+    "deployment": {"url": "http://localhost:3773", "expose": True},
     # Link to the skill we defined in Step 2
-    "skills": ["skills/zk-policy"], 
+    "skills": ["skills/zk-policy"],
 }
 
 if __name__ == "__main__":
