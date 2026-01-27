@@ -219,10 +219,6 @@ class BinduApplication(Starlette):
             with_app=True,
         )
 
-        # OAuth endpoints (if Hydra is enabled)
-        if app_settings.auth.enabled and app_settings.auth.provider == "hydra":
-            self._register_oauth_endpoints()
-
         # Docs/Chat UI endpoint
         self._add_route("/docs", self._docs_endpoint, ["GET"], with_app=False)
 
@@ -263,52 +259,6 @@ class BinduApplication(Starlette):
             payment_status_endpoint,
             ["GET"],
             with_app=True,
-        )
-
-    def _register_oauth_endpoints(self) -> None:
-        """Register OAuth client management endpoints."""
-        from .endpoints import (
-            create_oauth_client_endpoint,
-            delete_oauth_client_endpoint,
-            get_oauth_client_endpoint,
-            get_token_endpoint,
-            list_oauth_clients_endpoint,
-        )
-
-        logger.info("Registering OAuth management endpoints")
-
-        # Admin endpoints for OAuth client management
-        self._add_route(
-            "/admin/oauth/clients",
-            create_oauth_client_endpoint,
-            ["POST"],
-            with_app=False,
-        )
-        self._add_route(
-            "/admin/oauth/clients",
-            list_oauth_clients_endpoint,
-            ["GET"],
-            with_app=False,
-        )
-        self._add_route(
-            "/admin/oauth/clients/{client_id}",
-            get_oauth_client_endpoint,
-            ["GET"],
-            with_app=False,
-        )
-        self._add_route(
-            "/admin/oauth/clients/{client_id}",
-            delete_oauth_client_endpoint,
-            ["DELETE"],
-            with_app=False,
-        )
-
-        # Token endpoint (public)
-        self._add_route(
-            "/oauth/token",
-            get_token_endpoint,
-            ["POST"],
-            with_app=False,
         )
 
     def _add_route(

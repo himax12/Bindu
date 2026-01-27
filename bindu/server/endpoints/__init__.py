@@ -24,13 +24,6 @@ from .skills import (
     skills_list_endpoint,
 )
 from .metrics import metrics_endpoint
-from .oauth_endpoints import (
-    create_oauth_client_endpoint,
-    delete_oauth_client_endpoint,
-    get_oauth_client_endpoint,
-    get_token_endpoint,
-    list_oauth_clients_endpoint,
-)
 
 __all__ = [
     # A2A Protocol
@@ -52,10 +45,4 @@ __all__ = [
     "skill_documentation_endpoint",
     # Metrics
     "metrics_endpoint",
-    # OAuth Endpoints
-    "create_oauth_client_endpoint",
-    "list_oauth_clients_endpoint",
-    "get_oauth_client_endpoint",
-    "delete_oauth_client_endpoint",
-    "get_token_endpoint",
 ]
