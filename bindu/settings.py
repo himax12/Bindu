@@ -692,6 +692,11 @@ class SchedulerSettings(BaseSettings):
     queue_name: str = "bindu:tasks"  # Can keep default queue name
     max_connections: int = 10  # Connection pool setting
     retry_on_timeout: bool = True  # Retry behavior setting
+    poll_timeout: int = Field(
+        default=3600,
+        validation_alias=AliasChoices("poll_timeout", "REDIS_POLL_TIMEOUT"),
+        description="Timeout in seconds for Redis blpop operations. Higher values reduce API calls but increase task start latency.",
+    )
 
 
 class RetrySettings(BaseSettings):
