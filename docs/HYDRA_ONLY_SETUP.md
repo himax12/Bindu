@@ -1,29 +1,7 @@
 # Hydra-Only Authentication Setup
 
-This document describes the simplified authentication setup using **only Ory Hydra** for OAuth2/OIDC authentication, with Kratos removed.
+This document describes the simplified authentication setup using **only Ory Hydra** for OAuth2/OIDC authentication.
 
-## What Was Removed
-
-### 1. Kratos Configuration Class
-- Removed `KratosConfig` from `bindu/settings.py`
-- Removed encryption key validation
-- Removed identity schema settings
-- Removed session management settings
-
-### 2. Kratos Client Code
-- Updated `bindu/server/endpoints/oauth_user.py` to use Hydra token introspection instead of Kratos session validation
-- Changed from cookie-based sessions (`ory_kratos_session`) to Bearer token authentication
-- Removed `bindu.auth.kratos.client` import
-
-### 3. Documentation
-- Removed `docs/KRATOS_OAUTH_CREDENTIALS.md`
-
-### 4. Tests
-- Removed Kratos tests from `tests/unit/test_ory_config.py`
-- Kept only OAuth provider configuration tests
-
-### 5. Package Documentation
-- Updated `bindu/auth/__init__.py` to remove Kratos references
 
 ## Current Authentication Flow
 
@@ -135,16 +113,6 @@ curl -X POST https://hydra.getbindu.com/oauth2/introspect \
 
 ## API Changes
 
-### Before (Kratos)
-
-```python
-# Old: Cookie or X-Session-Token header
-GET /oauth/connect/notion
-Cookie: ory_kratos_session=SESSION_TOKEN
-# OR
-X-Session-Token: SESSION_TOKEN
-```
-
 ### After (Hydra)
 
 ```python
@@ -156,17 +124,6 @@ Authorization: Bearer ACCESS_TOKEN
 ## Code Changes
 
 ### Authentication Function
-
-**Before:**
-```python
-async def get_user_from_session(request: Request) -> str:
-    """Extract user_id from Kratos session."""
-    session_token = request.cookies.get("ory_kratos_session")
-    
-    async with KratosClient(...) as kratos:
-        session = await kratos.verify_session(session_token)
-        return session["identity"]["id"]
-```
 
 **After:**
 ```python
@@ -189,20 +146,6 @@ async def get_user_from_session(request: Request) -> str:
 5. **Stateless**: No session management needed
 6. **Scalable**: Tokens can be validated without database lookups (with caching)
 
-## When to Add Kratos Back
-
-Consider adding Kratos if you need:
-- Self-service user registration/login UI flows
-- Email verification and password recovery
-- Profile management
-- Social login (Google, GitHub, etc.)
-- Multi-factor authentication (MFA)
-
-For now, Hydra provides sufficient authentication for:
-- Agent-to-agent communication (M2M)
-- API authentication
-- Service-to-service communication
-- OAuth2 client management
 
 ## Testing
 
@@ -232,30 +175,3 @@ curl -X POST https://hydra.getbindu.com/oauth2/introspect \
   -u "test-client:test-secret-123" \
   -d "token=$TOKEN"
 ```
-
-## Migration Guide
-
-If you have existing code using Kratos:
-
-1. **Replace session cookies with Bearer tokens**
-   - Change from `Cookie: ory_kratos_session=...`
-   - To `Authorization: Bearer ...`
-
-2. **Update authentication checks**
-   - Replace `KratosClient.verify_session()`
-   - With `HydraClient.introspect_token()`
-
-3. **Update user identification**
-   - Replace `session["identity"]["id"]`
-   - With `token_info["sub"]`
-
-4. **Remove Kratos environment variables**
-   - Remove `KRATOS__*` variables
-   - Keep only `HYDRA__*` variables
-
-## Support
-
-For issues or questions:
-- Check Hydra documentation: https://www.ory.sh/docs/hydra
-- Review OAuth2 spec: https://oauth.net/2/
-- See Hydra deployment guide: `/Users/rahuldutta/Documents/saptha-me/infragrid/terraform/ORY_DEPLOYMENT_GUIDE.md`
