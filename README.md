@@ -404,6 +404,230 @@ Output:
 
 <br/>
 
+## [Authentication](https://docs.getbindu.com/bindu/learn/auth/overview)
+
+Bindu uses Hydra as its authentication backend for production deployments. 
+
+Its Optional - you can run agents with auth too.
+
+Configure Hydra connection via environment variables:
+
+```bash
+# You can find in the env.example file
+# Hydra Configuration
+# We do need ot if you want to keep the important apis behind auth
+# Enable authentication
+AUTH__ENABLED=true
+# Set provider to Hydra
+AUTH__PROVIDER=hydra
+HYDRA__ADMIN_URL=https://hydra-admin.getbindu.com
+HYDRA__PUBLIC_URL=https://hydra.getbindu.com
+```
+
+When you will deploy the agent, you can grab the access token by calling the api.
+
+```bash
+curl -X POST https://hydra.getbindu.com/oauth2/token \
+  -H "Content-Type: application/x-www-form-urlencoded" \
+  -d "grant_type=client_credentials" \
+  -d "client_id=did:bindu:<YOUR_AGENT_DID>" \
+  -d "client_secret=<YOUR_CLIENT_SECRET>" \
+  -d "scope=openid offline agent:read agent:write"
+```
+You can find the agent id in the agent card and can get the client secret from the .bindu/oauth_credentials.json file.
+
+You can use the UI aslo to grab the access token.
+
+Go to frontend then `npm run dev`
+ - Settings -> Authentication -> Provide YOUR_CLIENT_SECRET -> Get Access Token
+
+---
+
+<br/>
+
+## [Payment Integration (X402)](https://docs.getbindu.com/bindu/learn/payment/overview)
+
+Bindu supports the **X402 payment protocol**, enabling you to monetize your AI agents by requiring cryptocurrency payments before executing specific methods. This allows you to build paid AI services with native blockchain payment integration.
+
+### 🎯 Overview
+
+The X402 payment system allows you to:
+- **Gate specific methods** behind micropayments (e.g., `message/send`)
+- **Accept USDC payments** on Base Sepolia testnet (or mainnet)
+- **Automatic payment verification** via blockchain signatures
+- **Session-based payment flow** with browser-based wallet integration
+
+### 📋 Configuration
+
+Add the `execution_cost` configuration to your agent config to enable payment gating:
+
+```python
+config = {
+    "author": "your.email@example.com",
+    "name": "paid_agent",
+    "description": "An agent that requires payment",
+    "deployment": {"url": "http://localhost:3773", "expose": True},
+    "execution_cost": {
+        "amount": "$0.0001",           # Amount in USD (will be converted to USDC)
+        "token": "USDC",                # Token type (USDC supported)
+        "network": "base-sepolia",      # Network (base-sepolia for testing, base for production)
+        "pay_to_address": "0x265<your-wallet-address>",  # Your wallet address
+        "protected_methods": [
+            "message/send"              # Methods that require payment
+        ]
+    }
+}
+```
+
+**Configuration Parameters:**
+- `amount`: Payment amount in USD format (e.g., `"$0.0001"`, `"$1.00"`)
+- `token`: Currently supports `"USDC"` (USD Coin)
+- `network`: Blockchain network - use `"base-sepolia"` for testing, `"base"` for production
+- `pay_to_address`: Your Ethereum wallet address where payments will be sent
+- `protected_methods`: Array of JSON-RPC methods that require payment (e.g., `["message/send"]`)
+
+### 🔧 Setup for Testing
+
+#### 1. Create a Crypto Wallet
+
+Choose one of these wallet options:
+
+**MetaMask (Recommended):**
+1. Install the [MetaMask browser extension](https://metamask.io/)
+2. Create a new wallet or import an existing one
+3. Copy your wallet address (starts with `0x...`)
+
+or 
+
+**Coinbase Wallet:**
+1. Install the [Coinbase Wallet extension](https://www.coinbase.com/wallet)
+2. Set up your wallet
+3. Copy your wallet address
+
+#### 2. Get Test USDC
+
+For testing on Base Sepolia testnet:
+
+1. **Get Base Sepolia ETH** (for gas fees):
+   - Visit [Chainlink Faucet](https://faucets.chain.link/base-sepolia)
+   - Connect your wallet
+   - Request test ETH
+
+2. **Get Base Sepolia USDC**:
+   - The payment system will guide you through obtaining test USDC
+   - Alternatively, use a Base Sepolia faucet that provides USDC
+
+#### 3. Update Agent Configuration
+
+Add your wallet address to the agent config:
+
+```python
+"pay_to_address": "0xYourWalletAddressHere"  # Replace with your actual address
+```
+
+### 🚀 Payment Flow
+
+#### Step 1: Start a Payment Session
+
+When a user tries to access a protected method, they must first initiate a payment session:
+
+```bash
+curl --location --request POST 'http://localhost:3773/api/start-payment-session' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <your-access-token>'
+```
+
+**Response:**
+```json
+{
+    "session_id": "<session-id>",
+    "browser_url": "http://localhost:3773/payment-capture?session_id=<session-id>",
+    "expires_at": "<expires-at>",
+    "status": "pending"
+}
+```
+
+**Response Fields:**
+- `session_id`: Unique identifier for this payment session
+- `browser_url`: URL to open in browser for payment completion
+- `expires_at`: Session expiration timestamp (typically 60 seconds)
+- `status`: Current payment status (`pending`, `completed`, or `failed`)
+
+#### Step 2: Complete Payment in Browser
+
+1. Open the `browser_url` in your web browser
+2. Connect your wallet (MetaMask or Coinbase Wallet)
+3. Review the payment details:
+   - Amount in USDC
+   - Recipient address
+   - Network (Base Sepolia)
+4. Approve and sign the transaction
+5. Wait for blockchain confirmation
+
+![Payment Required Screen](assets/payment-required-base.png)
+
+#### Step 3: Verify Payment Status
+
+After completing the payment, check the session status:
+
+```bash
+curl --location 'http://localhost:3773/api/payment-status/<session_id>' \
+--header 'Authorization: Bearer <your-access-token>'
+```
+
+**Successful Payment Response:**
+```json
+{
+    "session_id": "LJK3cVOhBl2OBm_9lkJZKyPRxNXjueJUmO7gPmu1unc",
+    "status": "completed",
+    "payment_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+}
+```
+
+![Payment Success Screen](assets/payment-required-success.png)
+
+**Response Fields:**
+- `session_id`: The payment session identifier
+- `status`: Payment status (`completed` means payment verified)
+- `payment_token`: JWT token to include in subsequent API calls
+
+#### Step 4: Use the Agent with Payment Token
+
+Include the `payment_token` in your agent requests:
+
+```bash
+curl --location 'http://localhost:3773/' \
+--header 'Content-Type: application/json' \
+--header 'Authorization: Bearer <your-access-token>' \
+--header 'X-Payment-Token: <payment-token>' \
+--data '{
+    "jsonrpc": "2.0",
+    "method": "message/send",
+    "params": {
+        "message": {
+            "role": "user",
+            "content": "Hello, paid agent!"
+        }
+    },
+    "id": 1
+}'
+```
+
+### 📝 Example Implementation
+
+See the complete example at:
+```
+examples/beginner/echo_agent_behind_paywall.py
+```
+
+### UI Integration
+
+From UI you can get the access token and use it to make the payment session.
+
+---
+
+<br/>
+
 ## [Postgres Storage](https://docs.getbindu.com/bindu/learn/storage/overview)
 
 Bindu uses PostgreSQL as its persistent storage backend for production deployments. The storage layer is built with SQLAlchemy's async engine and uses imperative mapping with protocol TypedDicts.
@@ -1240,10 +1464,10 @@ Want integration with your favorite framework? [Let us know on Discord](https://
 
 ## 🧪 Testing
 
-Bindu maintains **70%+ test coverage**:
+Bindu maintains **64%+ test coverage**:
 
 ```bash
-uv run pytest -n auto --cov=bindu --cov-report= && coverage report --skip-covered --fail-under=70
+uv run pytest -n auto --cov=bindu --cov-report= && coverage report --skip-covered --fail-under=64
 ```
 
 ---
@@ -1374,6 +1598,7 @@ Grateful to these projects:
 - [12 Factor Agents](https://github.com/humanlayer/12-factor-agents/blob/main/content/factor-11-trigger-from-anywhere.md)
 - [A2A](https://github.com/a2aproject/A2A)
 - [AP2](https://github.com/google-agentic-commerce/AP2)
+- [Huggingface chatui](https://github.com/huggingface/chat-ui)
 - [X402](https://github.com/coinbase/x402)
 - [Bindu Logo](https://openmoji.org/library/emoji-1F33B/)
 - [ASCII Space Art](https://www.asciiart.eu/space/other)
@@ -1385,13 +1610,7 @@ Grateful to these projects:
 ## 🗺️ Roadmap
 
 - [ ] GRPC transport support
-- [x] Sentry error tracking
-- [x] Ag-UI integration
-- [x] Retry mechanism
 - [ ] Increase test coverage to 80% - In progress
-- [x] Redis scheduler implementation
-- [x] Postgres database for memory storage
-- [x] Negotiation support
 - [ ] AP2 end-to-end support
 - [ ] DSPy integration - In progress
 - [ ] MLTS support
