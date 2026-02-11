@@ -27,11 +27,32 @@ tags:
     description: Decentralized Identifier resolution
   - name: Skills
     description: Agent skills and capabilities
+  - name: Negotiation
+    description: Capability assessment endpoint for task negotiation
   - name: Payment
     description: x402 payment protocol endpoints
+  - name: Health & Monitoring
+    description: Health check and monitoring endpoints
 
 paths:
   /:
+    get:
+      tags:
+        - Agent Discovery
+      summary: Root Redirect
+      description: |
+        GET request to root redirects to the agent card at /.well-known/agent.json (302 redirect).
+      operationId: rootRedirect
+      security: []
+      responses:
+        '302':
+          description: Redirect to agent card
+          headers:
+            Location:
+              schema:
+                type: string
+                example: "/.well-known/agent.json"
+
     post:
       tags:
         - JSON-RPC
@@ -309,6 +330,42 @@ paths:
                   did: "http://localhost:3773/did/resolve"
 
   /did/resolve:
+    get:
+      tags:
+        - DID Resolution
+      summary: Resolve DID (GET)
+      description: |
+        Resolves a Decentralized Identifier (DID) via GET request with query parameter.
+      operationId: resolveDidGet
+      security: []
+      parameters:
+        - name: did
+          in: query
+          required: true
+          description: The DID to resolve
+          schema:
+            type: string
+          example: "did:bindu:raahul_at_getbindu_com:first_agent:e091ddb0b2c84bd8991fdfd1ecbb9da6"
+      responses:
+        '200':
+          description: DID document
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DidDocument'
+        '400':
+          description: Invalid DID format
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: DID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
     post:
       tags:
         - DID Resolution
@@ -370,6 +427,73 @@ paths:
                 $ref: '#/components/schemas/ErrorResponse'
         '404':
           description: DID not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /agent/negotiation:
+    post:
+      tags:
+        - Negotiation
+      summary: Assess Task Capability
+      description: |
+        Assess agent's capability to handle a task. Evaluates skill match, IO compatibility,
+        performance, load, and cost to produce an acceptance decision with confidence and detailed scoring.
+
+        **Required fields:**
+        - task_summary (string, max 10000 chars)
+
+        **Optional fields:**
+        - task_details, input_mime_types, output_mime_types, max_latency_ms, max_cost_amount,
+          required_tools, forbidden_tools, min_score, weights
+      operationId: assessTaskCapability
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/NegotiationRequest'
+            example:
+              task_summary: "Answer questions about machine learning concepts"
+              task_details: "User needs help understanding neural networks and deep learning"
+              input_mime_types:
+                - "text/plain"
+                - "application/json"
+              output_mime_types:
+                - "application/json"
+              max_latency_ms: 5000
+              max_cost_amount: 0.01
+              required_tools: []
+              forbidden_tools: []
+              min_score: 0.5
+              weights:
+                skill_match: 0.55
+                io_compatibility: 0.20
+                performance: 0.15
+                load: 0.05
+                cost: 0.05
+      responses:
+        '200':
+          description: Capability assessment result
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NegotiationResponse'
+              example:
+                accepted: true
+                confidence: 0.85
+                scores:
+                  skill_match: 0.9
+                  io_compatibility: 1.0
+                  performance: 0.8
+                  load: 0.7
+                  cost: 0.9
+                overall_score: 0.87
+                reasoning: "Agent has strong capability in question answering with compatible IO formats"
+        '400':
+          description: Invalid request
           content:
             application/json:
               schema:
@@ -573,6 +697,98 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  /payment-capture:
+    get:
+      tags:
+        - Payment
+      summary: Payment Capture Page
+      description: |
+        Browser page to capture payment. Shows paywall UI and captures payment token when completed.
+        This is typically opened in a browser, not called programmatically.
+      operationId: paymentCapturePage
+      security: []
+      parameters:
+        - name: session_id
+          in: query
+          required: true
+          description: The payment session ID
+          schema:
+            type: string
+          example: "Z_1Y3U3waXK2YUKB6llcIwn9XJcviEBhuFL8WUutAQ8"
+      responses:
+        '200':
+          description: Payment capture page HTML
+          content:
+            text/html:
+              schema:
+                type: string
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /health:
+    get:
+      tags:
+        - Health & Monitoring
+      summary: Health Check
+      description: |
+        Health check endpoint for service monitoring. Returns service status, uptime,
+        version information, and readiness state.
+      operationId: healthCheck
+      security: []
+      responses:
+        '200':
+          description: Service health status
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HealthResponse'
+              example:
+                status: "healthy"
+                uptime: 3600
+                version: "1.0.0"
+                ready: true
+                timestamp: "2025-10-26T14:47:52.183416+00:00"
+
+  /metrics:
+    get:
+      tags:
+        - Health & Monitoring
+      summary: Prometheus Metrics
+      description: |
+        Prometheus metrics endpoint for scraping. Returns metrics in Prometheus text format.
+
+        **Metrics exposed:**
+        - http_requests_total: Total HTTP requests by method, endpoint, and status
+        - http_request_duration_seconds: HTTP request latency histogram
+        - agent_tasks_active: Currently active tasks per agent
+        - agent_tasks_completed_total: Total completed tasks per agent and status
+      operationId: prometheusMetrics
+      security: []
+      responses:
+        '200':
+          description: Prometheus metrics in text format
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: |
+                # HELP http_requests_total Total HTTP requests
+                # TYPE http_requests_total counter
+                http_requests_total{method="GET",endpoint="/health",status="200"} 1234
+                # HELP http_request_duration_seconds HTTP request latency
+                # TYPE http_request_duration_seconds histogram
+                http_request_duration_seconds_bucket{le="0.1"} 100
+                # HELP agent_tasks_active Currently active tasks
+                # TYPE agent_tasks_active gauge
+                agent_tasks_active{agent="first_agent"} 5
+                # HELP agent_tasks_completed_total Total completed tasks
+                # TYPE agent_tasks_completed_total counter
+                agent_tasks_completed_total{agent="first_agent",status="completed"} 42
 
 components:
   securitySchemes:
@@ -1110,6 +1326,126 @@ components:
         timestamp:
           type: string
           format: date-time
+
+    NegotiationRequest:
+      type: object
+      required:
+        - task_summary
+      properties:
+        task_summary:
+          type: string
+          maxLength: 10000
+          description: Brief summary of the task
+        task_details:
+          type: string
+          description: Detailed task description
+        input_mime_types:
+          type: array
+          items:
+            type: string
+          description: Accepted input MIME types
+        output_mime_types:
+          type: array
+          items:
+            type: string
+          description: Accepted output MIME types
+        max_latency_ms:
+          type: integer
+          description: Maximum acceptable latency in milliseconds
+        max_cost_amount:
+          type: number
+          description: Maximum acceptable cost
+        required_tools:
+          type: array
+          items:
+            type: string
+          description: Tools that must be available
+        forbidden_tools:
+          type: array
+          items:
+            type: string
+          description: Tools that must not be used
+        min_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Minimum acceptance score threshold
+        weights:
+          type: object
+          description: Scoring weights for different factors
+          properties:
+            skill_match:
+              type: number
+            io_compatibility:
+              type: number
+            performance:
+              type: number
+            load:
+              type: number
+            cost:
+              type: number
+
+    NegotiationResponse:
+      type: object
+      required:
+        - accepted
+        - confidence
+        - overall_score
+      properties:
+        accepted:
+          type: boolean
+          description: Whether the agent accepts the task
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Confidence in the assessment
+        scores:
+          type: object
+          description: Individual scoring factors
+          properties:
+            skill_match:
+              type: number
+            io_compatibility:
+              type: number
+            performance:
+              type: number
+            load:
+              type: number
+            cost:
+              type: number
+        overall_score:
+          type: number
+          minimum: 0
+          maximum: 1
+          description: Weighted overall score
+        reasoning:
+          type: string
+          description: Explanation of the assessment
+
+    HealthResponse:
+      type: object
+      required:
+        - status
+        - ready
+      properties:
+        status:
+          type: string
+          enum: ["healthy", "unhealthy", "degraded"]
+          description: Overall service health status
+        uptime:
+          type: integer
+          description: Service uptime in seconds
+        version:
+          type: string
+          description: Service version
+        ready:
+          type: boolean
+          description: Whether service is ready to accept requests
+        timestamp:
+          type: string
+          format: date-time
+          description: Current server timestamp
 
     ErrorResponse:
       type: object
