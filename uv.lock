@@ -339,7 +339,6 @@ wheels = [
 name = "bindu"
 source = { editable = "." }
 dependencies = [
-    { name = "agno" },
     { name = "aiofiles" },
     { name = "alembic" },
     { name = "asyncpg" },
@@ -348,19 +347,11 @@ dependencies = [
     { name = "coinbase-advanced-py" },
     { name = "cookiecutter" },
     { name = "cryptography" },
-    { name = "ddgs" },
     { name = "detect-secrets" },
-    { name = "dotenv" },
-    { name = "duckduckgo-search" },
     { name = "eth-account" },
     { name = "httpx" },
-    { name = "langchain" },
-    { name = "langchain-openai" },
-    { name = "langgraph" },
     { name = "loguru" },
     { name = "numpy" },
-    { name = "ollama" },
-    { name = "openrouter" },
     { name = "opentelemetry-api" },
     { name = "opentelemetry-exporter-otlp" },
     { name = "opentelemetry-exporter-otlp-proto-http" },
@@ -387,6 +378,17 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+agents = [
+    { name = "agno" },
+    { name = "ddgs" },
+    { name = "dotenv" },
+    { name = "duckduckgo-search" },
+    { name = "langchain" },
+    { name = "langchain-openai" },
+    { name = "langgraph" },
+    { name = "ollama" },
+    { name = "openrouter" },
+]
 core = [
     { name = "aiofiles" },
     { name = "base58" },
@@ -424,7 +426,7 @@ dev = [
 
 [package.metadata]
 requires-dist = [
-    { name = "agno", specifier = ">=2.5.2" },
+    { name = "agno", marker = "extra == 'agents'", specifier = ">=2.5.2" },
     { name = "aiofiles", specifier = "==24.1.0" },
     { name = "aiofiles", marker = "extra == 'core'", specifier = "==24.1.0" },
     { name = "alembic", specifier = "==1.17.2" },
@@ -436,21 +438,21 @@ requires-dist = [
     { name = "cookiecutter", specifier = "==2.6.0" },
     { name = "cryptography", specifier = "==44.0.2" },
     { name = "cryptography", marker = "extra == 'core'", specifier = "==44.0.2" },
-    { name = "ddgs", specifier = ">=9.10.0" },
+    { name = "ddgs", marker = "extra == 'agents'", specifier = ">=9.10.0" },
     { name = "detect-secrets", specifier = "==1.5.0" },
-    { name = "dotenv", specifier = ">=0.9.9" },
-    { name = "duckduckgo-search", specifier = ">=8.1.1" },
+    { name = "dotenv", marker = "extra == 'agents'", specifier = ">=0.9.9" },
+    { name = "duckduckgo-search", marker = "extra == 'agents'", specifier = ">=8.1.1" },
     { name = "eth-account", specifier = "==0.13.7" },
     { name = "httpx", specifier = "==0.28.1" },
     { name = "httpx", marker = "extra == 'core'", specifier = "==0.28.1" },
-    { name = "langchain", specifier = ">=1.2.9" },
-    { name = "langchain-openai", specifier = ">=1.1.8" },
-    { name = "langgraph", specifier = ">=1.0.8" },
+    { name = "langchain", marker = "extra == 'agents'", specifier = ">=1.2.9" },
+    { name = "langchain-openai", marker = "extra == 'agents'", specifier = ">=1.1.8" },
+    { name = "langgraph", marker = "extra == 'agents'", specifier = ">=1.0.8" },
     { name = "loguru", specifier = "==0.7.3" },
     { name = "loguru", marker = "extra == 'core'", specifier = "==0.7.3" },
     { name = "numpy", specifier = "==2.3.5" },
-    { name = "ollama", specifier = ">=0.6.1" },
-    { name = "openrouter", specifier = ">=0.6.0" },
+    { name = "ollama", marker = "extra == 'agents'", specifier = ">=0.6.1" },
+    { name = "openrouter", marker = "extra == 'agents'", specifier = ">=0.6.0" },
     { name = "opentelemetry-api", specifier = "==1.35.0" },
     { name = "opentelemetry-exporter-otlp", specifier = "==1.35.0" },
     { name = "opentelemetry-exporter-otlp-proto-http", specifier = "==1.35.0" },
@@ -485,7 +487,7 @@ requires-dist = [
     { name = "web3", specifier = "==7.13.0" },
     { name = "x402", specifier = "==0.2.1" },
 ]
-provides-extras = ["core"]
+provides-extras = ["agents", "core"]
 
 [package.metadata.requires-dev]
 dev = [

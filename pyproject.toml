@@ -57,19 +57,23 @@ dependencies = [
     "pyperclip==1.11.0",
     # Security
     "detect-secrets==1.5.0",
-    "dotenv>=0.9.9",
-    "ddgs>=9.10.0",
-    "openrouter>=0.6.0",
-    "langchain>=1.2.9",
-    "langchain-openai>=1.1.8",
-    "langgraph>=1.0.8",
     "python-dotenv>=1.1.0",
-    "agno>=2.5.2",
-    "ollama>=0.6.1",
-    "duckduckgo-search>=8.1.1",
 ]
 
 [project.optional-dependencies]
+# Agent frameworks and tools for examples (use: pip install bindu[agents])
+agents = [
+    "agno>=2.5.2",
+    "langchain>=1.2.9",
+    "langchain-openai>=1.1.8",
+    "langgraph>=1.0.8",
+    "ollama>=0.6.1",
+    "duckduckgo-search>=8.1.1",
+    "openrouter>=0.6.0",
+    "ddgs>=9.10.0",
+    "dotenv>=0.9.9",
+]
+
 # Minimal core only (use: pip install bindu[core] --only-deps)
 core = [
     "uvicorn==0.34.1",
