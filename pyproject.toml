@@ -19,7 +19,7 @@ dependencies = [
     # Core runtime
     "uvicorn==0.34.1",
     "starlette==0.48.0",
-    "pydantic==2.11.3",
+    "pydantic>=2.11.7",
     "loguru==0.7.3",
     "rich==14.3.2",
     "orjson==3.10.18",
@@ -78,7 +78,7 @@ agents = [
 core = [
     "uvicorn==0.34.1",
     "starlette==0.48.0",
-    "pydantic==2.11.3",
+    "pydantic>=2.11.7",
     "loguru==0.7.3",
     "rich==14.3.2",
     "orjson==3.10.18",
